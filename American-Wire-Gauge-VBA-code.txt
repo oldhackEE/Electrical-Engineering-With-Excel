@@ -1,0 +1,25 @@
+Function AWGDIA(gauge)
+
+rgauge = Round(gauge, 0)  'Round to integer
+
+If rgauge < -3 Or rgauge > 56 Then   'Raise error if gauge is out of range
+    Err.Raise vbObjectError
+End If
+
+    AWGDIA = 0.005 * 92 ^ ((36 - rgauge) / 39)
+
+End Function
+
+Function AWGRES(gauge As Integer)
+    'Returns resistance of AWG in ohms per foot
+    rgauge = Round(gauge, 0)  'Round to integer
+    
+    If rgauge < -3 Or n > 56 Then
+        Err.Raise vbObjectError
+    End If
+           
+    dia = 0.005 * 92 ^ ((36 - rgauge) / 39)
+    
+    AWGRES = 10.37 / ((dia * 1000) ^ 2)
+
+End Function
