@@ -1,0 +1,9 @@
+Function Stdres1(r)
+    k = 10 ^ (1 / 96)
+    L = Log(r) / Log(10)
+    d = Int(L)
+    rx = 10 ^ (L - d)
+    n = Round(Log(rx) / Log(k), 0)
+    rs = Round(k ^ n, 2)
+    Stdres1 = rs * 10 ^ d
+End Function
