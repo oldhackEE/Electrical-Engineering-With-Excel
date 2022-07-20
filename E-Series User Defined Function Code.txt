@@ -1,0 +1,39 @@
+Function Eseries(inputval, Optional series As Integer = 6)
+'The function
+    Dim value_steps(1 To 7) As Integer  'Defines the number of values steps within a decade
+    value_steps(1) = 3    '40%
+    value_steps(2) = 6    '20%
+    value_steps(3) = 12   '10%
+    value_steps(4) = 24   '5$
+    value_steps(5) = 48   '2%
+    value_steps(6) = 96   '1%
+    value_steps(7) = 192  '0.5%
+    
+    If series > 4 Then
+        round_digits = 2    'Rounding for 2%, 1%, and 0.5%
+        Else
+        round_digits = 1    'Rounding for 40%, 20%, 10%, and 5%
+    End If
+    
+    k = 10 ^ (1 / value_steps(series))  'Geometric progression base ratio
+    l = Log(inputval) / Log(10#)        'Number of exact decades of input value. VB Log function has e base,_
+    '                                   'so it must be converted to base 10 Log of input returns number of decades
+    d = Int(l)                          'Integer number of the inputval decades
+                                        'Remainder over integer decade - mantissa
+    rx = 10 ^ (l - d)                   'Base number with one integer and other remaining digits
+    n = Round(Log(rx) / Log(k), 0)      'Ratio of number of intervals above base ratio to the base ratio, then round up.
+
+    rs = Round(k ^ n, round_digits)     'Create value based on Nth order and round
+    
+    Select Case rs                      'Handle exceptions
+        Case Is = 2.6, 2.9, 3.5, 3.8, 4.2, 4.6
+            rs = rs + 0.1
+        Case Is = 3.2
+            If series < 5 Then rs = rs + 0.1
+        Case Is = 9.19
+            rs = rs + 0.01
+        Case Is = 8.3
+            rs = rs - 0.1
+    End Select
+    Eseries = rs * 10 ^ d              'Scale back to input value
+End Function
