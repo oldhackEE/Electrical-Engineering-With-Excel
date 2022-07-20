@@ -23,3 +23,4 @@ Function AWGRES(gauge As Integer)
     AWGRES = 10.37 / ((dia * 1000) ^ 2)
 
 End Function
+
