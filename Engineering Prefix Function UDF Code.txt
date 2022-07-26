@@ -1,0 +1,49 @@
+Function EngPrefix(inputval, Optional rounddigits As Integer = -1, Optional space_separator As Boolean = False)
+    'Scales input value to the appropriate engineering level of thousands, converts the number to a string
+    'and provides optional rounding and an optional space between the number and the associate SI prefix.
+
+
+
+    Dim prefixstr(1 To 17) As String  'Define prefix characters
+        prefixstr(1) = "y"     'yocto
+        prefixstr(2) = "z"     'zepto
+        prefixstr(3) = "a"     'atto
+        prefixstr(4) = "f"     'femto
+        prefixstr(5) = "p"     'pico
+        prefixstr(6) = "n"     'nano
+        prefixstr(7) = "µ"     'micro
+        prefixstr(8) = "m"     'milli
+        prefixstr(9) = ""
+        prefixstr(10) = "k"    'kilo
+        prefixstr(11) = "M"    'mega
+        prefixstr(12) = "G"    'giga
+        prefixstr(13) = "T"    'tera
+        prefixstr(14) = "P"    'peta
+        prefixstr(15) = "E"    'exa
+        prefixstr(16) = "Z"    'zetta
+        prefixstr(17) = "Y"    'yotta
+
+    If space_separator = True Then 'Add optional space separator
+        sep = " "
+    Else
+        sep = ""
+    End If
+    
+    'Number of thousands of input
+    'VBA log function is base e, so division by Log(1000) is a base change to base 1000
+    'Absolute value needed because you can't take the log of a negative number
+    thousands_level = Int(Log(Abs(inputval)) / Log(1000))
+
+    ‘Scaling and Optional rounding
+	If rounddigits < 0 Then
+        	rtnval = inputval / (1000 ^ thousands_level)
+	Else
+        	rtnval = round(inputval / (1000 ^ thousands_level), rounddigits)
+	End If
+
+    
+    'Add optional space separator and concatenate prefix string
+    EngPrefix = rtnval & sep & prefixstr(thousands_level + 9)
+
+End Function
+
