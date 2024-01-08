@@ -1,0 +1,63 @@
+Function CapPrefix(inputval, Optional prefix_type As Integer = 1, Optional round_digits As Integer = -1, Optional space_separator As Boolean = False)
+    'Scales input value to the appropriate level of thousands, converts the number to a string
+    'and provides optional rounding and an optional space between the number and the associate SI prefix.
+
+    'Prefix_type = 0 values below 0.001 are pF and equal to and above are µF
+    'Prefix_type = 1 values below 0.01 are pF and equal to and above are µF
+    'Prefix_type = 2 values below 0.1 are pF and equal to and above are µF
+    'Prefix_type = 3 all pF
+    'Prefix_type = 4 all µF
+        
+    If space_separator = True Then 'Add optional space separator
+        sep = " "
+    Else
+        sep = ""
+    End If
+    
+Select Case prefix_type
+    Case 0
+        If inputval < 0.001 * 10 ^ -6 Then
+            rtnval = inputval * 10 ^ 12
+            prefix_letter = "p"
+        Else
+            rtnval = inputval * 10 ^ 6
+            prefix_letter = "µ"
+        End If
+    Case 1
+        If inputval < 0.01 * 10 ^ -6 Then
+                rtnval = inputval * 10 ^ 12
+                prefix_letter = "p"
+        Else
+            rtnval = inputval * 10 ^ 6
+            prefix_letter = "µ"
+        End If
+        
+    Case 2
+        If inputval < 0.1 * 10 ^ -6 Then
+                rtnval = inputval * 10 ^ 12
+                prefix_letter = "p"
+        Else
+            rtnval = inputval * 10 ^ 6
+            prefix_letter = "µ"
+        End If
+    
+    Case 3
+        rtnval = inputval * 10 ^ 12
+        prefix_letter = "p"
+        
+    Case 4
+        rtnval = inputval * 10 ^ 6
+        prefix_letter = "µ"
+    
+End Select
+
+    'Scaling and Optional rounding
+    If round_digits >= 0 Then
+            rtnval = Round(rtnval, round_digits)
+    End If
+
+    
+    'Add optional space separator and concatenate prefix string
+    CapPrefix = rtnval & sep & prefix_letter & "F"
+
+End Function
