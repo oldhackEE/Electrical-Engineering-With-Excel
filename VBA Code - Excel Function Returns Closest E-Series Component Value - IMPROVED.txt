@@ -1,0 +1,144 @@
+Option Explicit
+
+Function ESERIES(input_value As Double, Optional selected_eseries As Variant = 6) As Double
+
+'This function take a numeric input value, and a E-series designator, and returns
+'the nearest E-series value.
+
+'Allows return of zero for zero input
+If input_value = 0 Then
+    ESERIES = 0
+    Exit Function
+End If
+
+Dim evalues(1 To 193) As Double 'Array of E-series preferred values
+Dim i As Integer                'Index for evalues array
+Dim inputpowerof10 As Integer   'Number of powers of 10 the  input value is
+                                'i.e. 1000 = 3
+Dim scaledinput As Double       'Input value scaled to between 1 and 10
+Dim r As Double                 'Geometric progression common ratio
+Dim minstore As Double          'Store minimum difference between the input value
+                                'and all values in table
+Dim closestscaled As Double     'Closest scaled number found in the applicable array
+Dim valsteps As Integer         'Series value steps i.e. 3, 6, 12, ...192 etc
+
+'Case statements load the array of evalues applicable to its selected series
+'The n + 1 evalue array is loaded with 10 to ensure 10 is returned if closer
+'to input value
+Select Case selected_eseries
+Case "E3", "e3", 0.4, "40%", 1
+    valsteps = 3
+    evalues(1) = 1
+    evalues(2) = 2.2
+    evalues(3) = 4.7
+    evalues(4) = 10
+    
+Case "E6", "e6", 0.2, "20%", 2
+    valsteps = 6
+    evalues(1) = 1
+    evalues(2) = 1.5
+    evalues(3) = 2.2
+    evalues(4) = 3.3
+    evalues(5) = 4.7
+    evalues(6) = 6.8
+    evalues(7) = 10
+    
+Case "E12", "e12", 0.1, "10%", 3
+    valsteps = 12
+    evalues(1) = 1
+    evalues(2) = 1.2
+    evalues(3) = 1.5
+    evalues(4) = 1.8
+    evalues(5) = 2.2
+    evalues(6) = 2.7
+    evalues(7) = 3.3
+    evalues(8) = 3.9
+    evalues(9) = 4.7
+    evalues(10) = 5.6
+    evalues(11) = 6.8
+    evalues(12) = 8.2
+    evalues(13) = 10
+
+Case "E24", "e24", 0.05, "5%", 4
+    valsteps = 24
+    evalues(1) = 1
+    evalues(2) = 1.1
+    evalues(3) = 1.2
+    evalues(4) = 1.3
+    evalues(5) = 1.5
+    evalues(6) = 1.6
+    evalues(7) = 1.8
+    evalues(8) = 2
+    evalues(9) = 2.2
+    evalues(10) = 2.4
+    evalues(11) = 2.7
+    evalues(12) = 3
+    evalues(13) = 3.3
+    evalues(14) = 3.6
+    evalues(15) = 3.9
+    evalues(16) = 4.3
+    evalues(17) = 4.7
+    evalues(18) = 5.1
+    evalues(19) = 5.6
+    evalues(20) = 6.2
+    evalues(21) = 6.8
+    evalues(22) = 7.5
+    evalues(23) = 8.2
+    evalues(24) = 9.1
+    evalues(25) = 10
+
+Case "E48", "e48", 0.02, "2%", 5
+    valsteps = 48
+    r = 10# ^ (1 / valsteps)    'Common ratio
+    'Fill array with values
+    For i = 1 To valsteps + 1
+        evalues(i) = Round(r ^ (i - 1), 2)
+    Next i
+
+Case "E96", "e96", 0.01, "1%", 6
+    valsteps = 96
+    r = 10# ^ (1 / valsteps)    'Common ratio
+    'Fill array with values
+    For i = 1 To valsteps + 1
+        evalues(i) = Round(r ^ (i - 1), 2)
+    Next i
+
+Case "E192", "e192", 0.005, "0.5%", 7
+    valsteps = 192
+    r = 10# ^ (1 / valsteps)  'Common ratio
+    'Fill array with values
+    For i = 1 To valsteps + 1
+        evalues(i) = Round(r ^ (i - 1), 2)
+    Next i
+    'Exception of 9.19 to 9.20
+    evalues(186) = 9.2
+
+Case Else
+    'Raise error and exit function if no argument is matched
+    Err.Raise vbObjectError
+    Exit Function
+End Select
+
+'Scaling
+inputpowerof10 = Int(Log(input_value) / Log(10#))   'Number of powers of 10.
+                                                'If the the input value is i.e. 1000 = 3
+                                                'VBA Log function is base e,
+                                                'so it must be divided by Log(10)
+                                                'to change base to 10
+scaledinput = input_value / 10# ^ inputpowerof10    'Input value scaled to between 1 and 10
+
+'Find closest. Wrap through values array and test to see if the difference
+'between the scaled input and array value is minimum
+minstore = 11   'Seed with maximum value difference
+For i = 1 To valsteps + 1
+    If Abs(scaledinput - evalues(i)) < minstore Then
+        minstore = Abs(scaledinput - evalues(i))
+        closestscaled = evalues(i)
+    End If
+Next i
+
+'Scale back to the power of 10 of the input.
+ESERIES = closestscaled * 10# ^ inputpowerof10
+
+End Function
+
