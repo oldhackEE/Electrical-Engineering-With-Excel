@@ -1,0 +1,154 @@
+Function ENGPREFIX2(input_value As Double, _
+Optional unit_chr As String = "", _
+Optional cap_mode As Integer = 0, _
+Optional skip_milli As Boolean = False, _
+Optional µF_blank As Boolean = False, _
+Optional space_separator As Boolean = False, _
+Optional round_digits As Integer = -1) _
+As String
+
+
+'-----------------------------------DESCRIPTION-----------------------------------------------
+'Scales input value to the appropriate engineering level of thousands,
+'converts the number to a string and provides optional rounding
+'and an optional space between the number and the associated engineering SI prefix.
+'
+'------------------------------ARGUMENT DESCRIPTIONS------------------------------------------
+'input_value:       Number to have engineering SI prefix assigned
+'
+'unit_chr:          Characters of SI Unit to follow SI prefix as in F for Farads,
+'                   H for Henry,(Greek letter Omega for Ohms) and etc. Default is "".
+'
+'cap_mode:          Option to not return prefix "nano" for capacitors.
+'                   0 is normal - return nano [default]
+'                   1 is to skip nano and go from µF to pF below 0.001µF
+'                   2 is to skip nano and go from µF to pF below 0.01µF
+'                   3 is to skip nano and go from µF to pF below 0.1µF
+'
+'skip_milli:        Option to not return prefix "milli" for capacitors. Goes from µF to F.
+'                   Default is FALSE.
+'
+'µF_blank           If prefix µ is calculated, µ is not displayed. Use when schematics
+'                   say "All capacitors are in microfarads unless otherwise noted.
+'                   sep and unit_chr are set to null.
+'
+'space_separator:   Adds a space between the number and the prefix. Default is FALSE.
+'
+'round_digits:      Rounds the result to a specified number of digits.
+'                   -1 is no rounding [default]
+'                   0 is the integer of the output value (no decimals)
+'                   1 and up is number of decimals to round...2, 3, and etc.
+'-------------------------------------------------------------------------------------------
+                    
+                    
+    'Load SI prefix symbols into an array.
+    Dim prefixstr(1 To 21) As String
+    
+        prefixstr(1) = "q"     'quecto
+        prefixstr(2) = "r"     'ronto
+        prefixstr(3) = "y"     'yocto
+        prefixstr(4) = "z"     'zepto
+        prefixstr(5) = "a"     'atto
+        prefixstr(6) = "f"     'femto
+        prefixstr(7) = "p"     'pico
+        prefixstr(8) = "n"     'nano
+        prefixstr(9) = Chr(181) 'ASCII code 181 for Greek letter mu - micro - µ
+        prefixstr(10) = "m"    'milli
+        prefixstr(11) = ""     'Null
+        prefixstr(12) = "k"    'kilo
+        prefixstr(13) = "M"    'mega
+        prefixstr(14) = "G"    'giga
+        prefixstr(15) = "T"    'tera
+        prefixstr(16) = "P"    'peta
+        prefixstr(17) = "E"    'exa
+        prefixstr(18) = "Z"    'zetta
+        prefixstr(19) = "Y"    'yotta
+        prefixstr(20) = "R"    'ronna
+        prefixstr(21) = "Q"    'quetta
+                
+    unit_chr = Left(unit_chr, 3)    'Limit length to 3. Allows for SI unit "rad"
+    
+    Dim sep As String     'Space seperator character
+    If space_separator = True Then
+        sep = " "        'Add optional space separator
+    Else
+        sep = ""         'Elsewise null
+    End If
+    
+    'Accept an input of zero and return zero. Can't take log of zero.
+    If input_value = 0 Then
+        ENGPREFIX2 = 0 & sep & unit_chr
+        Exit Function
+    End If
+    
+    Dim µF2pF_splitval As Double    'Value where µF splits to pF
+    Select Case cap_mode            'Set µF2pF_splitval for various cap_mode(s)
+        Case Is = 0
+            'Do nothing and continue
+        Case Is = 1
+            µF2pF_splitval = 0.000000001    '0.001µF
+        Case Is = 2
+            µF2pF_splitval = 0.00000001     '0.01µF
+        Case Is = 3
+            µF2pF_splitval = 0.0000001      '0.1µF
+        Case Else
+            'Valid cap_mode argument is 0-3.
+            'Raise error and exit function if no valid argument is matched
+            'The range 0–512 is reserved for system errors;
+            'the range 513–65535 is available for user-defined errors.
+            'add error code number to the vbObjectError constant.
+            Err.Raise vbObjectError + 513
+            Exit Function
+    End Select
+           
+    'Number of thousands of input
+    'VBA log function is base e, so division by Log(1000#) is a base change to base 1000
+    'Absolute value needed because you can't take the log of a negative number
+    '# is "type declaration character" for DOUBLE
+    Dim thousands_level As Integer  'How many thousands level of input_value
+    'Get the integer of the log base 1000 of the absolute value of the input_value
+    thousands_level = Int(Log(Abs(input_value)) / Log(1000#))
+    
+    'Get prefix character from prefix array based in thousands_level and offset
+    Dim prefix As String            'Calculated SI prefix symbol from array
+    prefix = prefixstr(thousands_level + 11)    '11 is the offset to center
+                                                'of the array of 21 SI prefix symbols
+    
+    Dim output_value As Double      'Scaled value assigned to output
+    output_value = input_value / (1000# ^ thousands_level)
+
+    If prefix = "n" And cap_mode > 0 Then   'Convert nano to µ or p
+        If input_value >= µF2pF_splitval Then
+            output_value = output_value / 1000#
+            prefix = prefixstr(9)   'µ - micro
+        Else
+            output_value = output_value * 1000#
+            prefix = prefixstr(7)   'p -Pico
+        End If
+    End If
+
+    'Skip milli
+    If prefix = "m" And skip_milli Then       'Convert milli to µ
+        output_value = output_value * 1000#
+        prefix = prefixstr(9)   'prefixstr(9) = µ
+    End If
+
+    'µ Blank
+    If prefix = prefixstr(9) And µF_blank = True Then   'prefixstr(9) = µ
+        prefix = ""
+        sep = ""
+        unit_chr = ""
+    End If
+
+    'Optional rounding
+    Dim rtn_value As String         'Numeric part to be returned
+    If round_digits < 0 Then
+            rtn_value = output_value
+    Else
+            rtn_value = Round(output_value, round_digits)
+    End If
+
+    'Concatenate rtn_value with separator, prefix string, and unit character to return as ENGPREFIX2
+    ENGPREFIX2 = rtn_value & sep & prefix & unit_chr
+
+End Function
